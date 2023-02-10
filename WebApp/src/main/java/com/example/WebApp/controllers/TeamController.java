@@ -1,19 +1,42 @@
 package com.example.webapp.controllers;
 
+import com.example.webapp.models.Team;
 import com.example.webapp.models.User;
 import com.example.webapp.services.TeamService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+
+@RestController
 @RequiredArgsConstructor
 public class TeamController {
     private final TeamService teamService;
+
+    @RequestMapping("teams")
+    public List<String> list(){
+        List<Team> listOfTeam = teamService.listTeams();
+        List<String> listOfCodes = new ArrayList<>();
+        for (int i = 0; i< listOfTeam.size(); i++){
+            listOfCodes.add(listOfTeam.get(i).getCode());
+        }
+         return listOfCodes;
+
+    }
+
+    @PostMapping("/team/enter")
+    public String enterInTeam(@RequestBody Map<String,String> teamId){
+        System.out.println(teamId.values().toArray()[0]);
+        System.out.println(teamId.values().toArray()[1]);
+        User user = new User(teamId.values().toArray()[0].toString(), teamId.values().toArray()[1].toString());
+        teamService.enterInTeam(user);
+        return teamService.getUsersByCode(user.getTeamId()).toString();
+    }
 
     @GetMapping("/")
     public String teams(@RequestParam(name = "code", required = false) String code, Model model) {
@@ -33,11 +56,7 @@ public class TeamController {
         return "redirect:/";
     }
     //
-    @PostMapping("/team/enter")
-    public String enterInTeam(User user){
-        teamService.enterInTeam(user);
-        return "redirect:/";
-    }
+
     //
     @PostMapping("/team/delete")
     public String deleteProduct(String code) {
