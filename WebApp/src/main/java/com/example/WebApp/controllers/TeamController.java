@@ -4,7 +4,6 @@ import com.example.webapp.models.Team;
 import com.example.webapp.models.User;
 import com.example.webapp.services.TeamService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,6 +37,21 @@ public class TeamController {
         return teamService.getUsersByCode(user.getTeamId()).toString();
     }
 
+    @PostMapping("/team/create")
+    public String createTeam(@RequestBody Map<String,String> teamId) {
+        String username = teamId.values().toArray()[0].toString();
+        teamService.saveTeam(username);
+        String code = teamService.getTeamByAdminName(username).get(0).getCode();
+        return code;
+    }
+
+    @PostMapping("/exit")
+    public void exitFromTeam(@RequestBody Map<String,String> user){
+        String username = user.values().toArray()[0].toString();
+        teamService.exitFromTeam(username);
+    }
+
+
     @GetMapping("/")
     public String teams(@RequestParam(name = "code", required = false) String code, Model model) {
         model.addAttribute("teams", teamService.listTeams());
@@ -50,17 +64,14 @@ public class TeamController {
         return "team-store";
     }
     //
-    @PostMapping("/team/create")
-    public String createTeam(String username) {
-        teamService.saveTeam(username);
-        return "redirect:/";
-    }
+
+
     //
 
     //
     @PostMapping("/team/delete")
-    public String deleteProduct(String code) {
-        teamService.deleteTeam(code);
+    public String deleteProduct(@RequestBody Map<String,String> code) {
+        teamService.deleteTeam(code.values().toArray()[0].toString());
         return "redirect:/";
     }
 

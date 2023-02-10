@@ -42,13 +42,28 @@ public class TelegramBot extends TelegramLongPollingBot {
             switch (messageText) {
                 case "/start" -> startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
                 case "/enterInTeam" -> sendMessage(chatId, "Введите номер комнаты, в которую хотите войти");
+                case "/createTeam" -> {
+                    try {
+                       sendMessage(chatId,DbHelper.createPost(update.getMessage().getChat().getUserName()));
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                case "/exitFromTeam" -> {
+                    try {
+                        sendMessage(chatId,DbHelper.exitFromTeam(update.getMessage().getChat().getUserName()));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
 
             if (messageText.length() == 4) {
 
                 try {
 
-                    sendMessage(chatId, DbHelper.sendPOST(messageText, update.getMessage().getChat().getUserName()));
+                    sendMessage(chatId, DbHelper.enterPost(messageText, update.getMessage().getChat().getUserName()));
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -80,6 +95,9 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         row.add("/enterInTeam");
 
+        row.add("/createTeam");
+
+        row.add("/exitFromTeam");
 
         keyboardRows.add(row);
 

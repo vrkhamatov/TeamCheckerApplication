@@ -70,4 +70,15 @@ public class TeamService {
 
     }
 
+    public List<Team> getTeamByAdminName(String adminName){
+       System.out.println(teamRepository.getTeamByAdminName(adminName));
+       return teamRepository.getTeamByAdminName(adminName);
+    }
+
+    public void exitFromTeam(String username){
+        String code = teamRepository.getTeamByAdminName(username).get(0).getCode().toString();
+        deleteTeam(code);
+        userRepository.deleteAllByTeamId(code);
+    }
+
 }
