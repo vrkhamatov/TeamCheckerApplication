@@ -12,4 +12,7 @@ public interface TeamRepository extends JpaRepository<Team, String> {
     public void deleteTeamByAdminName(String adminName);
 
     public void deleteAllByCode(String code);
+
+    public int countByAdminName(String adminName);
+
 }

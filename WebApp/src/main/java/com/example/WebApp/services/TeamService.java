@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -19,7 +18,6 @@ import java.util.Objects;
 public class TeamService {
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
-
 
     public List<Team> listTeams() {
         return teamRepository.findAll();
@@ -60,22 +58,41 @@ public class TeamService {
         userRepository.save(new User(username, id));
     }
 
+    public boolean adminIsUnique(String username) {
+        if (teamRepository.countByAdminName(username) == 0) return true;
+        else
+            return false;
+    }
+
+    public boolean userIsUnique(String username) {
+        System.out.println(userRepository.countUserByUsername(username));
+        if (userRepository.countUserByUsername(username) == 0) return true;
+        else
+            return false;
+    }
+
     public void deleteTeam(String id) {
         teamRepository.deleteById(id);
     }
 
+    public User getTeamByUsername(String username){
+        User user = userRepository.getUserByUsername(username);
+        return user;
+    }
+
     public void enterInTeam(User user) {
-        userRepository.save(user);
+        if (teamRepository.getTeamByAdminName(user.getUsername()) == null)
+            userRepository.save(user);
         System.out.println();
 
     }
 
-    public List<Team> getTeamByAdminName(String adminName){
-       System.out.println(teamRepository.getTeamByAdminName(adminName));
-       return teamRepository.getTeamByAdminName(adminName);
+    public List<Team> getTeamByAdminName(String adminName) {
+        System.out.println(teamRepository.getTeamByAdminName(adminName));
+        return teamRepository.getTeamByAdminName(adminName);
     }
 
-    public void exitFromTeam(String username){
+    public void exitFromTeam(String username) {
         String code = teamRepository.getTeamByAdminName(username).get(0).getCode().toString();
         deleteTeam(code);
         userRepository.deleteAllByTeamId(code);

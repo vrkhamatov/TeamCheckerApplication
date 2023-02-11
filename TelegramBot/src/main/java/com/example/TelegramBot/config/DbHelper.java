@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 public class DbHelper {
@@ -22,7 +23,6 @@ public class DbHelper {
         return correctEnterMessage + response;
 
     }
-
 
     public static String enterPost(String username, String teamCode) throws IOException {
         URL obj = new URL("http://localhost:8488/team/enter");
@@ -63,7 +63,11 @@ public class DbHelper {
 
 
             System.out.println(response);
+            assert response != null;
+            if (!response.toString().equals("NO"))
             return parseResult(username,response);
+            else
+                return "Вы уже состоите в комнате";
         } else {
             System.out.println("POST request did not work.");
             return "Войти в комнату не удалось";
@@ -105,15 +109,60 @@ public class DbHelper {
             in.close();
 
             System.out.println(response);
-
-            String mes = "Вы успешно создали комнату с номером: " + response.toString() + "\n Сообщите его другим, чтобы они могли присоединиться в вашу комнату";
-
-            return mes;
+            assert response != null;
+            if (!response.toString().equals("NO"))
+            return "Вы успешно создали комнату с номером: " + response.toString() + "\n Сообщите его другим, чтобы они могли присоединиться в вашу комнату";
+            else
+                return "Вы уже создавали одну комнату, удалите её, прежде чем создать новую";
         } else {
             System.out.println("POST request did not work.");
             return "Войти в комнату не удалось";
         }
     }
+
+    public static String getCodeByTeamId(String username) throws IOException {
+        URL obj = new URL("http://localhost:8488/team/check");
+        JSONObject jObj = new JSONObject();
+
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+
+
+        jObj.put("username", username);
+        con.setDoOutput(true);
+        OutputStream os = con.getOutputStream();
+        byte[] out = jObj.toString().getBytes();
+        os.write(out);
+        os.flush();
+        os.close();
+
+        int responseCode = con.getResponseCode();
+        System.out.println("POST Response Code :: " + responseCode);
+
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+
+            StringBuilder response = null;
+
+            while ((inputLine = in.readLine()) != null) {
+                if (response != null)
+                    response.append(inputLine);
+                else
+                    response = new StringBuilder(inputLine);
+            }
+            in.close();
+
+            System.out.println(response);
+
+            return "Вы состоите в группе " + response.toString();
+        } else {
+            System.out.println("POST request did not work.");
+            return "Вы не состоите в группе";
+        }
+    }
+
 
     public static String exitFromTeam(String username) throws IOException {
         URL obj = new URL("http://localhost:8488/exit");
@@ -135,7 +184,7 @@ public class DbHelper {
         int responseCode = con.getResponseCode();
         System.out.println("POST Response Code :: " + responseCode);
 
-        if (responseCode == HttpURLConnection.HTTP_OK) { //success
+        if (responseCode == HttpURLConnection.HTTP_OK) {
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             String inputLine;
 
@@ -151,9 +200,7 @@ public class DbHelper {
 
             System.out.println(response);
 
-            String mes = "Вы успешно вышли из группы";
-
-            return mes;
+            return "Вы успешно вышли из группы";
         } else {
             System.out.println("POST request did not work.");
             return "Вы не состоите в группе";

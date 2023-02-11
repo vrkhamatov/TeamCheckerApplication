@@ -57,6 +57,13 @@ public class TelegramBot extends TelegramLongPollingBot {
                         e.printStackTrace();
                     }
                 }
+                case "/checkTeam" -> {
+                    try {
+                        sendMessage(chatId, DbHelper.getCodeByTeamId(update.getMessage().getChat().getUserName()));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
 
             if (messageText.length() == 4) {
@@ -98,6 +105,8 @@ public class TelegramBot extends TelegramLongPollingBot {
         row.add("/createTeam");
 
         row.add("/exitFromTeam");
+
+        row.add("/checkTeam");
 
         keyboardRows.add(row);
 
