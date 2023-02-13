@@ -81,10 +81,8 @@ public class TeamService {
     }
 
     public void enterInTeam(User user) {
-        if (teamRepository.getTeamByAdminName(user.getUsername()) == null)
+        if( userRepository.getUserByUsername(user.getUsername())== null)
             userRepository.save(user);
-        System.out.println();
-
     }
 
     public List<Team> getTeamByAdminName(String adminName) {

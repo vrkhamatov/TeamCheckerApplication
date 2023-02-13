@@ -33,6 +33,7 @@ public class TeamController {
 
         User user = new User(teamId.values().toArray()[0].toString(), teamId.values().toArray()[1].toString());
         if (teamService.userIsUnique(user.getUsername())) {
+            System.out.println(user.getUsername());
             teamService.enterInTeam(user);
             return teamService.getUsersByCode(user.getTeamId()).toString();
         }
