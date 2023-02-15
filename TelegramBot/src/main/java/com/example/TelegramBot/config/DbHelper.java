@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 public class DbHelper {
@@ -72,6 +71,49 @@ public class DbHelper {
             System.out.println("POST request did not work.");
             return "Войти в комнату не удалось";
         }
+    }
+
+    public static String sendLoc(double longitude,double latitude) throws IOException {
+        URL obj = new URL("http://localhost:8488/team/location");
+        JSONObject jObj = new JSONObject();
+
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+
+
+        jObj.put("longitude", longitude);
+        jObj.put("latitude", latitude);
+        con.setDoOutput(true);
+        OutputStream os = con.getOutputStream();
+        byte[] out = jObj.toString().getBytes();
+        os.write(out);
+        os.flush();
+        os.close();
+
+        int responseCode = con.getResponseCode();
+        System.out.println("POST Response Code :: " + responseCode);
+
+        if (responseCode == HttpURLConnection.HTTP_OK) { //success
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+
+            StringBuilder response = null;
+
+            while ((inputLine = in.readLine()) != null) {
+                if (response != null)
+                    response.append(inputLine);
+                else
+                    response = new StringBuilder(inputLine);
+            }
+            in.close();
+            return response.toString();
+        }
+        else {
+            System.out.println("POST request did not work.");
+            return "Отправка локации не удалась";
+        }
+
     }
 
     public static String createPost(String username) throws IOException {

@@ -15,9 +15,19 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class User {
     @Id
+    @Column(name = "id")
+    private String id;
+
     @Column(name = "username")
     private String username;
+
     @Column(name = "team_code")
     private String teamId;
+
+    @Column(name = "user_latitude")
+    private double userLatitude;
+
+    @Column(name = "user_longitude")
+    private double userLongitude;
 
 }

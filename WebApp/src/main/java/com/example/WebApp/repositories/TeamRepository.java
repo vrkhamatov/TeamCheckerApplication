@@ -15,4 +15,5 @@ public interface TeamRepository extends JpaRepository<Team, String> {
 
     public int countByAdminName(String adminName);
 
+
 }

@@ -17,11 +17,10 @@ public class Team {
     @Id
     private String code;
 
-    @Column(name = "user_quantity")
-    private int usersQuantity;
-
     @Column(name = "admin_username")
     private String adminName;
 
+    @Column(name = "admin_id")
+    private String admin_id;
 
 }

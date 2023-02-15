@@ -11,7 +11,8 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
+import java.lang.Math;
+import java.util.UUID;
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -35,7 +36,19 @@ public class TeamService {
             return null;
     }
 
-    public String idGenerator(List<Team> teams) {
+    public double getDistanceBetweenPointsNew(double latitude1, double longitude1, double latitude2, double longitude2) {
+        double theta = longitude1 - longitude2;
+        double distance = 60 * 1.1515 * (180/Math.PI) * Math.acos(
+                Math.sin(latitude1 * (Math.PI/180)) * Math.sin(latitude2 * (Math.PI/180)) +
+                        Math.cos(latitude1 * (Math.PI/180)) * Math.cos(latitude2 * (Math.PI/180)) * Math.cos(theta * (Math.PI/180))
+        );
+
+
+        distance = distance * 1.609344*1000;
+            return distance;
+    }
+
+    public String teamIdGenerator(List<Team> teams) {
         String sAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         int firstNumber = (int) Math.round(Math.random() * 9);
         int secondNumber = (int) Math.round(Math.random() * 25);
@@ -45,7 +58,7 @@ public class TeamService {
                 + thirdNumber + sAlphabet.charAt(fourthNumber);
         for (int i = 0; i < teams.size(); i++) {
             if (Objects.equals(id, teams.get(i).getCode())) {
-                id = idGenerator(teams);
+                id = teamIdGenerator(teams);
             }
         }
         return id;
@@ -53,9 +66,11 @@ public class TeamService {
 
     public void saveTeam(String username) {
         log.info("Saving new {}", username);
-        String id = idGenerator(teamRepository.findAll());
-        teamRepository.save(new Team(id, 1, username));
-        userRepository.save(new User(username, id));
+        String teamId = teamIdGenerator(teamRepository.findAll());
+        String userId = java.util.UUID.randomUUID().toString();
+        System.out.println(userId);
+        teamRepository.save(new Team(teamId,username,userId));
+        userRepository.save(new User(userId,username, teamId,200.0,200.0));
     }
 
     public boolean adminIsUnique(String username) {
@@ -95,5 +110,6 @@ public class TeamService {
         deleteTeam(code);
         userRepository.deleteAllByTeamId(code);
     }
+
 
 }

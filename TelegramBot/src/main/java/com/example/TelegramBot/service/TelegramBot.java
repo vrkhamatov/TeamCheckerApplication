@@ -1,22 +1,22 @@
 package com.example.telegrambot.service;
 
-
-import com.example.telegrambot.Consts;
 import com.example.telegrambot.config.BotConfig;
 import com.example.telegrambot.config.DbHelper;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.ChatPermissions;
-import org.telegram.telegrambots.meta.api.objects.Location;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
@@ -44,10 +44,19 @@ public class TelegramBot extends TelegramLongPollingBot {
         ChatPermissions chatPermissions = new ChatPermissions();
         chatPermissions.setCanSendMessages(true);
 
-        update.getMessage().getChat().setPermissions(chatPermissions);
-        if (update.hasMessage() && update.getMessage().hasText()) {
-            String messageText = update.getMessage().getText();
+        if (update.hasMessage() && update.getMessage().hasText() || (update.hasMessage() && update.getMessage().hasLocation())) {
+            update.getMessage().getChat().setPermissions(chatPermissions);
             long chatId = update.getMessage().getChatId();
+            String messageText = update.getMessage().getText();
+            if (update.getMessage().hasLocation()) {
+                try {
+                    sendMessage(chatId,DbHelper.sendLoc(update.getMessage().getLocation().getLongitude(), update.getMessage().getLocation().getLatitude()));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+
             switch (messageText) {
                 case "/start" -> startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
                 case "Войти в группу" -> {
@@ -55,9 +64,10 @@ public class TelegramBot extends TelegramLongPollingBot {
                 }
                 case "Создать группу" -> {
                     try {
-                       sendMessage(chatId,DbHelper.createPost(update.getMessage().getChat().getUserName()));
-
+                       addInlineKeyboard(chatId,DbHelper.createPost(update.getMessage().getChat().getUserName()));
                     } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (TelegramApiException e) {
                         e.printStackTrace();
                     }
                 }
@@ -89,7 +99,16 @@ public class TelegramBot extends TelegramLongPollingBot {
             }
 
 
+
         }
+            else if (update.hasCallbackQuery()) {
+            long chatId = update.getCallbackQuery().getMessage().getChatId();
+            if (Objects.equals(update.getCallbackQuery().getData(), "Query location"))
+            {
+
+            }
+        }
+
 
     }
 
@@ -100,24 +119,37 @@ public class TelegramBot extends TelegramLongPollingBot {
         sendMessage(chatId, answer);
     }
 
+    private void addInlineKeyboard(long chatId,String textToSend) throws TelegramApiException {
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
+        inlineKeyboardButton.setText("Запросить геопозицию пользователей");
+        inlineKeyboardButton.setCallbackData("Query location");
+        List<InlineKeyboardButton> inlineKeyboardButtonList = new ArrayList<>();
+        inlineKeyboardButtonList.add(inlineKeyboardButton);
+        List<List<InlineKeyboardButton>> keyBoardButtons = new ArrayList<>();
+        keyBoardButtons.add(inlineKeyboardButtonList);
+        inlineKeyboardMarkup.setKeyboard(keyBoardButtons);
+        message.setText(textToSend);
+        message.setReplyMarkup(inlineKeyboardMarkup);
+        execute(message);
+    }
+
     private void sendMessage(long chatId, String textToSend) {
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
         message.setText(textToSend);
 
         ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-
         List<KeyboardRow> keyboardRows = new ArrayList<>();
-
         KeyboardRow row1 = new KeyboardRow();
         KeyboardRow row2 = new KeyboardRow();
         KeyboardRow row3 = new KeyboardRow();
         KeyboardRow row4 = new KeyboardRow();
         KeyboardRow row5 = new KeyboardRow();
 
-
         row1.add("Войти в группу");
-
         row2.add("Создать группу");
 
         row3.add("Выйти из группы");
@@ -129,12 +161,12 @@ public class TelegramBot extends TelegramLongPollingBot {
         keyboardRows.add(row2);
         keyboardRows.add(row3);
         keyboardRows.add(row4);
+        KeyboardRow row6 = new KeyboardRow();
 
+        keyboardRows.add(row6);
         keyboardMarkup.setKeyboard(keyboardRows);
 
         message.setReplyMarkup(keyboardMarkup);
-
-
         try {
             execute(message);
         } catch (TelegramApiException ignored) {
