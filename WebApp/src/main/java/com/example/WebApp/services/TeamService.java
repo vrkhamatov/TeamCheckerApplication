@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.lang.Math;
-import java.util.UUID;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -36,18 +36,6 @@ public class TeamService {
             return null;
     }
 
-    public double getDistanceBetweenPointsNew(double latitude1, double longitude1, double latitude2, double longitude2) {
-        double theta = longitude1 - longitude2;
-        double distance = 60 * 1.1515 * (180/Math.PI) * Math.acos(
-                Math.sin(latitude1 * (Math.PI/180)) * Math.sin(latitude2 * (Math.PI/180)) +
-                        Math.cos(latitude1 * (Math.PI/180)) * Math.cos(latitude2 * (Math.PI/180)) * Math.cos(theta * (Math.PI/180))
-        );
-
-
-        distance = distance * 1.609344*1000;
-            return distance;
-    }
-
     public String teamIdGenerator(List<Team> teams) {
         String sAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         int firstNumber = (int) Math.round(Math.random() * 9);
@@ -64,13 +52,11 @@ public class TeamService {
         return id;
     }
 
-    public void saveTeam(String username) {
+    public void saveTeam(String userId, String username) {
         log.info("Saving new {}", username);
         String teamId = teamIdGenerator(teamRepository.findAll());
-        String userId = java.util.UUID.randomUUID().toString();
-        System.out.println(userId);
-        teamRepository.save(new Team(teamId,username,userId));
-        userRepository.save(new User(userId,username, teamId,200.0,200.0));
+        teamRepository.save(new Team(teamId, username, userId));
+        userRepository.save(new User(userId, username, teamId, 200.0, 200.0));
     }
 
     public boolean adminIsUnique(String username) {
@@ -80,7 +66,6 @@ public class TeamService {
     }
 
     public boolean userIsUnique(String username) {
-        System.out.println(userRepository.countUserByUsername(username));
         if (userRepository.countUserByUsername(username) == 0) return true;
         else
             return false;
@@ -90,18 +75,17 @@ public class TeamService {
         teamRepository.deleteById(id);
     }
 
-    public User getTeamByUsername(String username){
+    public User getTeamByUsername(String username) {
         User user = userRepository.getUserByUsername(username);
         return user;
     }
 
     public void enterInTeam(User user) {
-        if( userRepository.getUserByUsername(user.getUsername())== null)
+        if (userRepository.getUserByUsername(user.getUsername()) == null)
             userRepository.save(user);
     }
 
     public List<Team> getTeamByAdminName(String adminName) {
-        System.out.println(teamRepository.getTeamByAdminName(adminName));
         return teamRepository.getTeamByAdminName(adminName);
     }
 
@@ -110,6 +94,5 @@ public class TeamService {
         deleteTeam(code);
         userRepository.deleteAllByTeamId(code);
     }
-
 
 }

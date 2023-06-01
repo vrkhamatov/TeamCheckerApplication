@@ -7,13 +7,8 @@ import java.util.List;
 
 public interface TeamRepository extends JpaRepository<Team, String> {
 
-    public List<Team> getTeamByAdminName(String adminName);
+    List<Team> getTeamByAdminName(String adminName);
 
-    public void deleteTeamByAdminName(String adminName);
-
-    public void deleteAllByCode(String code);
-
-    public int countByAdminName(String adminName);
-
+    int countByAdminName(String adminName);
 
 }
