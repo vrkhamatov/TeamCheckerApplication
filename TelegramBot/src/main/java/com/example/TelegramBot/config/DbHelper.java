@@ -11,7 +11,7 @@ import java.net.URL;
 
 public class DbHelper {
 
-    public static String parseResult(String username, StringBuilder response){
+    public static String parseResult(String username, StringBuilder response) {
         String correctEnterMessage = "Вы успешно зашли в комнату: " + username + "\nСостав комнаты:\n";
 
         assert response != null;
@@ -22,6 +22,7 @@ public class DbHelper {
         return correctEnterMessage + response;
 
     }
+
 
     public static String enterPost(String username, String teamCode) throws IOException {
         URL obj = new URL("http://localhost:8488/team/enter");
@@ -34,7 +35,10 @@ public class DbHelper {
 
         jObj.put("username", username);
         jObj.put("teamCode", teamCode);
+
         con.setDoOutput(true);
+
+
         OutputStream os = con.getOutputStream();
         byte[] out = jObj.toString().getBytes();
         os.write(out);
@@ -59,12 +63,9 @@ public class DbHelper {
             in.close();
 
 
-
-
-            System.out.println(response);
             assert response != null;
-            if (!response.toString().equals("NO"))
-            return parseResult(username,response);
+            if (!response.toString().equals("405"))
+                return parseResult(username, response);
             else
                 return "Вы уже состоите в комнате";
         } else {
@@ -73,50 +74,7 @@ public class DbHelper {
         }
     }
 
-    public static String sendLoc(double longitude,double latitude) throws IOException {
-        URL obj = new URL("http://localhost:8488/team/location");
-        JSONObject jObj = new JSONObject();
-
-        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-        con.setRequestMethod("POST");
-        con.setRequestProperty("Content-Type", "application/json");
-
-
-        jObj.put("longitude", longitude);
-        jObj.put("latitude", latitude);
-        con.setDoOutput(true);
-        OutputStream os = con.getOutputStream();
-        byte[] out = jObj.toString().getBytes();
-        os.write(out);
-        os.flush();
-        os.close();
-
-        int responseCode = con.getResponseCode();
-        System.out.println("POST Response Code :: " + responseCode);
-
-        if (responseCode == HttpURLConnection.HTTP_OK) { //success
-            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            String inputLine;
-
-            StringBuilder response = null;
-
-            while ((inputLine = in.readLine()) != null) {
-                if (response != null)
-                    response.append(inputLine);
-                else
-                    response = new StringBuilder(inputLine);
-            }
-            in.close();
-            return response.toString();
-        }
-        else {
-            System.out.println("POST request did not work.");
-            return "Отправка локации не удалась";
-        }
-
-    }
-
-    public static String createPost(String username) throws IOException {
+    public static String createPost(String userId, String username) throws IOException {
         URL obj = new URL("http://localhost:8488/team/create");
         JSONObject jObj = new JSONObject();
 
@@ -126,6 +84,7 @@ public class DbHelper {
 
 
         jObj.put("username", username);
+        jObj.put("userId", userId);
         con.setDoOutput(true);
         OutputStream os = con.getOutputStream();
         byte[] out = jObj.toString().getBytes();
@@ -152,8 +111,8 @@ public class DbHelper {
 
             System.out.println(response);
             assert response != null;
-            if (!response.toString().equals("NO"))
-            return "Вы успешно создали комнату с номером: " + response.toString() + "\n Сообщите его другим, чтобы они могли присоединиться в вашу комнату";
+            if (!response.toString().equals("405"))
+                return "Вы успешно создали комнату с номером: " + response.toString() + "\n Сообщите его другим, чтобы они могли присоединиться в вашу комнату";
             else
                 return "Вы уже создавали одну комнату, удалите её, прежде чем создать новую";
         } else {
@@ -246,6 +205,49 @@ public class DbHelper {
         } else {
             System.out.println("POST request did not work.");
             return "Вы не состоите в группе";
+        }
+    }
+
+    public static String getUserId(String username) throws IOException {
+        URL obj = new URL("http://localhost:8488/userId");
+        JSONObject jObj = new JSONObject();
+
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+
+
+        jObj.put("username", username);
+        con.setDoOutput(true);
+        OutputStream os = con.getOutputStream();
+        byte[] out = jObj.toString().getBytes();
+        os.write(out);
+        os.flush();
+        os.close();
+
+        int responseCode = con.getResponseCode();
+        System.out.println("POST Response Code :: " + responseCode);
+
+        if (responseCode == HttpURLConnection.HTTP_OK) { //success
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+
+            StringBuilder response = null;
+
+            while ((inputLine = in.readLine()) != null) {
+                if (response != null)
+                    response.append(inputLine);
+                else
+                    response = new StringBuilder(inputLine);
+            }
+            in.close();
+
+            System.out.println(response);
+            assert response != null;
+            return response.toString();
+        } else {
+            System.out.println("POST request did not work.");
+            return "Войти в комнату не удалось";
         }
     }
 
